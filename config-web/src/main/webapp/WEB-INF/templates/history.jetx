@@ -1,0 +1,152 @@
+#set(title="配置历史-cms")
+#set(navbar="history")
+#tag layout_block("headContent")
+<style>
+  .table thead td {
+    background-color: lightgray
+  }
+
+  .table td:nth-child(-n+3) {
+    word-break: break-all;
+    word-wrap: break-word;
+  }
+
+  .table td:nth-child(1) {
+    width: 200px;
+  }
+
+  .table td:nth-child(2) {
+    width: 150px;
+  }
+
+  .table td:nth-child(3) {
+    min-width: 200px;
+  }
+
+  .table td:nth-child(4) {
+    width: 50px;
+  }
+
+  .table td:nth-child(5) {
+    width: 80px;
+  }
+
+  .table td:nth-child(6) {
+    width: 120px;
+  }
+
+  .text-blue {
+    color: blue
+  }
+</style>
+#end
+
+#tag layout_block("bodyContent")
+<div class="container-fluid">
+  <div>
+    <table id="dataTable" class="table">
+      <thead>
+      <tr id="advanced">
+        <td><input placeholder="搜索文件名"/></td>
+        <td><input placeholder="搜索配置组"/></td>
+        <td colspan="4"><input placeholder="搜索内容"/> <span class="help-inline text-info col-md-offset-1">搜索支持正则表达式</span>
+        </td>
+      </tr>
+      <tr>
+        <th>文件名</th>
+        <th>配置组</th>
+        <th>内容</th>
+        <th>版本</th>
+        <th>编辑</th>
+        <th>时间</th>
+      </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+#end
+
+#tag layout_block("scriptContent")
+<script type="text/javascript">
+  $(document).ready(function () {
+    var bootstrapDom = "<'row'<'col-sm-6'l><'col-sm-6'f>>" +
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-5'i><'col-sm-7'p>>";
+    var table = $("#dataTable").DataTable({
+      "dom": bootstrapDom,
+      "processing": false,
+      "serverSide": true,
+      "search": {
+        "regex": true
+      },
+      "order": [[5, 'desc'], [3, 'desc'], [0, 'asc']],
+      "ajax": "${CONTEXT_PATH}/${ajax}",
+      columns: [
+        {
+          data: 'name', render: function (data, type, row, meta) {
+          if (type == 'display') {
+            return "<a href=\"${CONTEXT_PATH}/view/history/" + row.id + "\">" + data + "</a>";
+          } else {
+            return data;
+          }
+        }
+        },
+        {data: 'profile'},
+        {data: 'summary'},
+        {data: 'version', searchable: false},
+        {
+          data: 'editor', render: function (data, type, row, meta) {
+          if (type == 'display') {
+            return "<a href=\"${CONTEXT_PATH}/history/?editor=" + encodeURIComponent(data) + "\">" + data + "</a>";
+          } else {
+            return data;
+          }
+        }
+        },
+        {data: 'mtime', searchable: false}],
+      "iDisplayLength": 25,
+      "sPaginationType": "full_numbers",
+      "language": {
+        "processing": "加载中...",
+        "lengthMenu": "显示 _MENU_ 项结果",
+        "zeroRecords": "没有匹配结果",
+        "emptyTable": "没有数据",
+        "info": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+        "infoEmpty": "显示第 0 至 0 项结果，共 0 项",
+        "infoFiltered": "(由 _MAX_ 项结果过滤)",
+        "infoPostFix": "",
+        "search": "搜索:",
+        "url": "",
+        "paginate": {
+          "first": "首页",
+          "previous": "上页",
+          "next": "下页",
+          "last": "末页"
+        }
+      }
+    });
+
+    var words = {}, draw = false;
+    $("#advanced input").on("keyup change", function () {
+      $("#advanced input").each(function (index) {
+        if (words[index] != this.value) {
+          words[index] = this.value;
+          table.column(index).search(this.value, true);
+          draw = true;
+        }
+      });
+      var word = $("#dataTable_filter input")[0].value;
+      if (words["search"] != word) {
+        words["search"] = word;
+        table.search(word, true);
+        draw = true;
+      }
+      if (draw) {
+        table.draw();
+      }
+    });
+  });
+</script>
+
+#end
+#include("/include/layout.jetx")
